@@ -1,0 +1,51 @@
+Please perform a complete security hardening of this project focused entirely on protecting user data and API keys. Go through every item below and implement all fixes automatically:
+
+1. API KEYS & SECRETS
+- Scan every single file in the codebase and find any API keys, tokens, passwords, or secrets that are hardcoded anywhere in the code, comments, or config files.
+- Move every single one of them to Replit Secrets (environment variables).
+- Replace all hardcoded values in the code with process.env.VARIABLE_NAME references.
+- Check .env files — make sure they are listed in .gitignore and never committed to GitHub.
+- Audit any third-party service configurations (Stripe, OpenAI, Supabase, etc.) and confirm all their keys are stored securely.
+
+2. USER PASSWORDS
+- Confirm that user passwords are NEVER stored in plain text in the database.
+- If passwords are stored in plain text right now — hash all of them immediately using bcrypt with a salt rounds value of at least 12.
+- Make sure the password hashing happens before saving to the database, not after.
+- Remove any logs or responses that might accidentally return or print a user's password.
+
+3. USER DATA PROTECTION
+- Ensure sensitive user fields (email, phone, address, payment info) are never returned in API responses unless absolutely necessary.
+- Add field filtering to all user-related API endpoints so only required fields are sent to the frontend.
+- Make sure the database does not store any payment card numbers or raw payment data — use Stripe tokens only.
+- Check that no user data is written to console.log or server logs.
+
+4. AUTHENTICATION & SESSIONS
+- Confirm that JWT tokens or session secrets are stored in Replit Secrets, not hardcoded.
+- Set token expiration — access tokens should expire in 15-60 minutes, refresh tokens in 7-30 days.
+- Make sure HTTP-only and Secure flags are set on all authentication cookies.
+- Confirm that after logout the session or token is properly invalidated.
+- Add rate limiting to login and registration endpoints to prevent brute force attacks (maximum 5-10 attempts per minute per IP).
+
+5. DATABASE SECURITY
+- Confirm the database connection string is stored in Replit Secrets.
+- Make sure the app uses parameterized queries or an ORM everywhere — no raw SQL string concatenation that could allow SQL injection.
+- Ensure database error messages are never sent directly to the frontend user.
+- Confirm that each user can only access their own data — add ownership checks to every query that fetches user-specific records.
+
+6. API ENDPOINT SECURITY
+- Add authentication middleware to all protected routes so unauthenticated users cannot access other users' data.
+- Make sure user IDs in API requests are always taken from the authenticated session, never from the request body or URL params directly.
+- Add input validation and sanitization to every endpoint that accepts user data.
+- Confirm that admin-only routes have proper role checks.
+
+7. HTTPS & HEADERS
+- Add the following security headers to all responses:
+  - Strict-Transport-Security
+  - X-Content-Type-Options: nosniff
+  - X-Frame-Options: DENY
+  - Content-Security-Policy
+- Make sure all external API calls from the backend use HTTPS, never HTTP.
+
+8. FINAL AUDIT
+- After all fixes are applied, scan the entire codebase one more time for any remaining hardcoded secrets or exposed user data.
+- Give me a detailed report of everything you changed, and list anything that requires my manual action (such as rotating compromised API keys or updating third-party service settings).

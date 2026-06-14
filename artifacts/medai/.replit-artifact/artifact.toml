@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "MedAI+"
+version = "1.0.0"
+id = "artifacts/medai"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23396
+
+[services.development]
+run = "pnpm --filter @workspace/medai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/medai", "run", "build" ]
+publicDir = "artifacts/medai/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23396"
+BASE_PATH = "/"

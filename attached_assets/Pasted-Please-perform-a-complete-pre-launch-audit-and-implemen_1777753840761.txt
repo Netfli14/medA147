@@ -1,0 +1,73 @@
+Please perform a complete pre-launch audit and implement all fixes automatically. Cover every item below:
+
+1. MOBILE & CROSS-BROWSER
+- Check that the entire site is fully responsive on mobile, tablet, and desktop screens.
+- Fix any layout issues, overflowing elements, or text that is too small on mobile.
+- Make sure all buttons, forms, and interactive elements work correctly on touch screens.
+- Ensure the site looks correct in Chrome, Safari, and Firefox.
+- Fix any broken links or buttons that lead nowhere.
+- Make sure all images load correctly and are not stretched or distorted.
+
+2. FAVICON & 404 PAGE
+- Add a favicon (tab icon) to the site if one does not exist.
+- Create a proper styled 404 page for unknown routes that matches the site design and has a button to go back to the homepage.
+
+3. PERFORMANCE & SPEED
+- Compress and optimize all images — use WebP format where possible.
+- Make sure large JavaScript and CSS files are minified in production build.
+- Remove any unused dependencies, dead code, or unused CSS.
+- Add lazy loading to images that are not visible on first load.
+- Run a production build and confirm the bundle size is reasonable.
+
+4. SEO
+- Make sure every page has a unique <title> tag that describes the page clearly.
+- Add a <meta name="description"> tag to every page with a relevant description.
+- Add Open Graph tags to every page so links look good when shared in social media and messengers:
+  - og:title
+  - og:description
+  - og:image (1200x630px)
+  - og:url
+- Create a sitemap.xml file and place it at /sitemap.xml
+- Create a robots.txt file and place it at /robots.txt
+- Make sure all images have descriptive alt attributes.
+- Use proper heading hierarchy (one H1 per page, then H2, H3 etc.)
+
+5. ANALYTICS
+- Add Google Analytics 4 tracking code to the site.
+- Set up basic event tracking for important user actions such as button clicks, form submissions, and sign ups.
+- Make sure the tracking fires correctly on all pages including single-page app route changes.
+
+6. LEGAL PAGES
+- Create a Privacy Policy page at /privacy that covers:
+  - What user data is collected
+  - How it is stored and protected
+  - Whether it is shared with third parties
+  - How users can request deletion of their data
+- Create a Terms of Use page at /terms with basic usage rules.
+- Add a cookie consent banner that appears on first visit and stores the user's choice.
+- Add links to Privacy Policy and Terms of Use in the footer on every page.
+
+7. EMAIL
+- Make sure all transactional emails are working correctly:
+  - Welcome email after registration
+  - Password reset email
+  - Any other trigger emails in the app
+- Check that emails are sent from a proper domain address, not a generic service address.
+- Make sure email subjects and content are professional and match the brand.
+- Confirm that emails do not contain any placeholder text like "Lorem ipsum" or "TODO".
+
+8. DOMAIN & HTTPS
+- Make sure the site is configured to use HTTPS everywhere.
+- Ensure HTTP automatically redirects to HTTPS.
+- Confirm there are no mixed content warnings (HTTP resources loaded on HTTPS page).
+- If a custom domain is connected, verify it is working correctly with no certificate errors.
+
+9. BACKUPS & CODE SAFETY
+- Make sure the project is connected to a GitHub repository and all current code is committed and pushed.
+- Confirm that the .env file and any files with secrets are listed in .gitignore and are not pushed to GitHub.
+- Verify that Replit Secrets contain all necessary environment variables for production.
+
+10. FINAL CHECK
+- Start the app in production mode and confirm it runs without any errors or warnings in the console.
+- Click through all main pages and user flows and report anything that is broken or looks wrong.
+- Give me a full report of everything you fixed and a list of anything that requires my manual action.

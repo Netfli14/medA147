@@ -1,0 +1,40 @@
+Please perform a complete pre-deployment audit and fix of this project before I publish it live. Go through each item below and handle everything automatically:
+
+1. SECURITY AUDIT
+- Scan the entire codebase for exposed API keys, secrets, or passwords hardcoded in the code. Move all of them to environment variables (Secrets).
+- Check all API routes and endpoints — make sure none are accessible without proper authentication where required.
+- Validate all user inputs to prevent SQL injection, XSS, and other common attacks.
+- Review CORS settings and make sure only allowed origins can access the backend.
+- Remove any debug logs, console.log statements, or test credentials left in the code.
+
+2. ENVIRONMENT VARIABLES
+- List all environment variables the project needs to run.
+- Confirm all of them are stored in Replit Secrets, not in the code.
+- Make sure the app correctly reads them at runtime.
+
+3. DATABASE
+- Ensure the production database is separate from the development database.
+- Check that all database connections are properly closed after use.
+- Confirm there are no hardcoded database credentials anywhere in the code.
+- Make sure all necessary tables, schemas, and indexes exist and are correct.
+
+4. BUILD & PERFORMANCE
+- Run the production build (e.g. npm run build) and fix any build errors.
+- Remove all unused dependencies from package.json.
+- Make sure assets (images, fonts, CSS) are optimized and loading correctly.
+- Confirm the app runs without errors in production mode.
+
+5. ERROR HANDLING
+- Add proper error handling to all API calls so the app doesn't crash on failure.
+- Make sure the user sees friendly error messages instead of raw server errors or stack traces.
+- Add a 404 page for unknown routes.
+
+6. DEPLOYMENT CONFIGURATION
+- Check the run and build commands are correctly configured for deployment.
+- Confirm the correct port is being used (Replit expects port 3000 or the PORT environment variable).
+- Make sure all static files are served correctly.
+
+7. FINAL CHECK
+- Run the app and confirm it starts without errors.
+- Test all main features end to end and report anything that is broken.
+- Give me a summary of everything you fixed and anything I still need to do manually.
