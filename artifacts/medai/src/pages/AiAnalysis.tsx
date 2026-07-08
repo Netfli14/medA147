@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import {
   Camera, Upload, AlertCircle, Image as ImageIcon, X, Sparkles, Eye,
   CheckCircle2, AlertTriangle, Zap, BookOpen, Info, Clock, Droplets, MapPin,
-  ExternalLink,
+  ExternalLink, Activity,
 } from "lucide-react";
 
 /** Render text with [label](url) markdown links as clickable <a> tags */
@@ -47,6 +47,13 @@ function extractLinks(text: string): { label: string; url: string }[] {
   return out;
 }
 
+interface VerdictEvidence {
+  journal: string;
+  url: string;
+  year: string;
+  finding: string;
+}
+
 interface AnalysisResult {
   conditions: {
     name: string;
@@ -54,6 +61,8 @@ interface AnalysisResult {
     likelihood: "low" | "medium" | "high";
   }[];
   observations: string[];
+  verdict: string;
+  verdictEvidence?: VerdictEvidence[];
   recommendation: string;
   medications?: { name: string; type: string; dosage: string; instructions: string; estimatedPrice?: string }[];
   healingStages?: { week: string; description: string; appearance: string }[];
@@ -72,6 +81,7 @@ export default function AiAnalysis() {
 
   const [translatedConditions, setTranslatedConditions] = useState<Record<number, string | null>>({});
   const [translatedObservations, setTranslatedObservations] = useState<Record<number, string | null>>({});
+  const [translatedVerdict, setTranslatedVerdict] = useState<string | null>(null);
   const [translatedRecommendation, setTranslatedRecommendation] = useState<string | null>(null);
 
   // Additional rash diagnostic questions
@@ -91,6 +101,8 @@ export default function AiAnalysis() {
     setFileName(file.name);
     setError(null);
     setResults(null);
+    setTranslatedVerdict(null);
+    setTranslatedRecommendation(null);
     const reader = new FileReader();
     reader.onload = (event) => setImage(event.target?.result as string);
     reader.readAsDataURL(file);
@@ -141,7 +153,13 @@ export default function AiAnalysis() {
       }
     } catch (err) {
       console.error("Analysis error:", err);
-      setError(t('errorAnalysisFailed'));
+      if (err instanceof Error && err.message.includes("429")) {
+        setError(t('rateLimitError') || "Too many requests. Please try again later.");
+      } else if (err instanceof Error && err.message.includes("Invalid image format")) {
+        setError(t('errorInvalidImageFormat') || "Invalid image format. Please upload a valid JPG/PNG.");
+      } else {
+        setError(t('errorAnalysisFailed'));
+      }
     } finally {
       setIsAnalyzing(false);
     }
@@ -331,6 +349,61 @@ export default function AiAnalysis() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {results.verdict && (
+                <div className="glass-card p-6 rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                      <Activity className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                        <h3 className="font-display text-lg font-bold text-foreground">{t('generalVerdict')}</h3>
+                        <TranslateButton
+                          text={results.verdict}
+                          onTranslated={setTranslatedVerdict}
+                          isTranslated={!!translatedVerdict}
+                          cacheKey={`vrd:${results.verdict.slice(0, 60)}`}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      <p className="text-muted-foreground leading-relaxed text-sm whitespace-pre-wrap">
+                          {translatedVerdict ? renderWithLinks(translatedVerdict) : renderWithLinks(results.verdict)}
+                      </p>
+
+                      {/* Evidence Basis for Verdict */}
+                      {results.verdictEvidence && results.verdictEvidence.length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          <p className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground flex items-center gap-1">
+                            <BookOpen className="h-3 w-3" />
+                            {t("evidenceBasis") || "Scientific evidence basis"}
+                          </p>
+                          <div className="space-y-2">
+                            {results.verdictEvidence.map((ev, i) => (
+                              <div key={i} className="flex gap-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                    <a href={ev.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-blue-700 dark:text-blue-300 hover:underline flex items-center gap-1">
+                                      <ExternalLink className="h-2.5 w-2.5" />
+                                      {ev.journal}
+                                    </a>
+                                    {ev.year && (
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 font-medium">
+                                        {ev.year}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground leading-relaxed">{ev.finding}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

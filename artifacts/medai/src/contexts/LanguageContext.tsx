@@ -33,8 +33,10 @@ export const translations: Translations = {
   openArticle: { en: 'Open article', ru: 'Открыть статью', kk: 'Мақаланы ашу', zh: '打开文章' },
   searchInJournal: { en: 'Search in journal', ru: 'Искать в журнале', kk: 'Журналдан іздеу', zh: '在期刊中搜索' },
   journalHome: { en: 'Homepage', ru: 'Сайт журнала', kk: 'Журнал сайты', zh: '期刊主页' },
+  evidenceBasis: { en: 'Scientific evidence basis', ru: 'Научная база доказательств', kk: 'Ғылыми дәлелдемелер базасы', zh: '科学证据基础' },
+  citedInVerdict: { en: 'Cited sources', ru: 'Процитированные источники', kk: 'Дәйексөз келтірілген дереккөздер', zh: '引用的来源' },
+  errorInvalidImageFormat: { en: 'Invalid image format. Please upload a valid JPG/PNG.', ru: 'Неверный формат изображения. Пожалуйста, загрузите JPG или PNG.', kk: 'Сурет форматы қате. JPG немесе PNG жүктеңіз.', zh: '图片格式无效。请上传有效的JPG/PNG。' },
   
- 
  // Homepage
  heroTagline: { en: 'Next-Gen Health Assistant', ru: 'Медицинский ИИ-ассистент нового поколения', kk: 'Жаңа буын денсаулық көмекшісі', zh: '新一代健康助手' },
  heroTitle1: { en: 'Your AI-Powered', ru: 'Ваш ИИ-помощник', kk: 'Сіздің AI-қуатты', zh: '您的AI驱动' },
