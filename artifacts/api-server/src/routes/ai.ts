@@ -404,22 +404,35 @@ router.post("/analyze-image", imageLimiter, async (req, res) => {
           role: "system",
           content: `${langInstruction}
 
-You are an expert medical image analyzer with the skills of a board-certified specialist in the relevant field. You provide systematic, evidence-based visual assessment.
+You are an expert medical image analyzer with the skills of a board-certified specialist in the relevant field (Dermatology, Radiology, etc.). You provide systematic, evidence-based visual assessment with 100% accurate scientific citations.
 
 ANALYSIS FRAMEWORK:
 ${typeInstructions[safeType]}
 
+${CLINICAL_KNOWLEDGE_BASE}
+
 GENERAL RULES:
-- Never give a definitive diagnosis — provide a differential diagnosis with probabilities
-- Recommend consulting the appropriate specialist
-- Flag any urgent/emergency findings immediately with clear language
-- Cite relevant clinical guidelines or journals where appropriate
-- Structure output: Findings → Differential Diagnosis → Recommended Action → Citations`,
+- Never give a definitive diagnosis — provide a differential diagnosis with probabilities.
+- Recommend consulting the appropriate specialist.
+- Flag any urgent/emergency findings immediately with clear language.
+- STRICT CITATION RULE: You MUST cite authoritative journals for your findings.
+- If you are unsure or the image is unclear, state it explicitly in the observations rather than guessing.
+
+${JOURNALS_INSTRUCTION}
+
+VERDICT FORMAT (MANDATORY — do not omit):
+The verdict field MUST include 2-3 inline journal citations using EXACTLY this format:
+"Per [Journal Name](https://url.com) (YEAR), Chapter/Section [Name/Number]: [specific clinical finding that directly connects the visual symptoms in the photo to the concluded condition]."
+Example: "Per [JAMA Dermatology](https://jamanetwork.com/journals/jamadermatology) (2022), Section 3: The presence of targetoid erythematous plaques with central clearing is 95% pathognomonic for Erythema Multiforme (evidence level 1B) — matching the lesions seen on this patient's palm."
+
+DO NOT HALLUCINATE: If you do not have the exact section or chapter, DO NOT invent one. Instead, provide a direct link to the article or a PubMed search URL that leads to the relevant evidence.
+
+The verdictEvidence array MUST mirror those inline citations with structured data.`,
         },
         {
           role: "user",
           content: [
-            { type: "text", text: "Analyze this medical image thoroughly. Identify findings, list differential diagnoses with likelihood, provide observations, and give a clear recommendation. Fill all fields in the structured output." },
+            { type: "text", text: "Analyze this medical image thoroughly. Identify visual findings, list differential diagnoses with likelihood, provide detailed observations, and give a clear recommendation. Provide a final verdict with 2-3 specific citations from authoritative medical journals (including section or chapter if possible) explaining why this visual pattern matches the most likely condition." },
             { type: "image_url", image_url: { url: image, detail: "high" } },
           ],
         },
@@ -450,6 +463,24 @@ GENERAL RULES:
                   type: "array",
                   items: { type: "string" },
                   description: "4-6 specific visual observations from the image (morphology, color, size, pattern, distribution, severity markers)",
+                },
+                verdict: {
+                  type: "string",
+                  description: "Summary verdict that MUST include 2-3 inline journal citations in format: Per [Journal](url) (YEAR), Section: finding that connects photo findings to conclusion."
+                },
+                verdictEvidence: {
+                  type: "array",
+                  description: "Structured citations that mirror the inline citations in the verdict field",
+                  items: {
+                    type: "object",
+                    properties: {
+                      journal: { type: "string", description: "Full journal name" },
+                      url: { type: "string", description: "Journal homepage or DOI URL" },
+                      year: { type: "string", description: "Publication year e.g. 2022" },
+                      finding: { type: "string", description: "The specific clinical finding from this journal that supports the verdict, explaining how it connects the visual symptoms to the conclusion" },
+                    },
+                    required: ["journal", "url", "year", "finding"],
+                  },
                 },
                 recommendation: {
                   type: "string",
@@ -484,7 +515,7 @@ GENERAL RULES:
                   },
                 },
               },
-              required: ["conditions", "observations", "recommendation"],
+              required: ["conditions", "observations", "verdict", "verdictEvidence", "recommendation"],
             },
           },
         },
@@ -1072,12 +1103,12 @@ APPROVED JOURNALS:
 ${APPROVED_JOURNALS.join("\n")}
 
 For each suggestion you MUST provide:
-1. The exact journal name and homepage URL from the list above
-2. A realistic article title (a real or highly plausible landmark article title for this condition)
-3. Publication year (between 2015-2024)
-4. A PubMed search URL using: https://pubmed.ncbi.nlm.nih.gov/?term=CONDITION+KEYWORDS (URL-encode spaces as +)
-5. A 1-2 sentence explanation of why this journal is the best source for this condition
-6. A direct article URL if known (use the journal's doi or search page otherwise)`,
+1. The exact journal name and homepage URL from the list above.
+2. A realistic article title (a real or highly plausible landmark article title for this condition).
+3. Publication year (between 2015-2024).
+4. A PubMed search URL using: https://pubmed.ncbi.nlm.nih.gov/?term=CONDITION+KEYWORDS (URL-encode spaces as +).
+5. A detailed explanation (2-3 sentences) of why this journal is a 100% truthful source for this condition, including which specific chapters or sections are most relevant.
+6. A direct article URL if known (use the journal's doi or search page otherwise).`,
         },
         {
           role: "user",
