@@ -112,6 +112,15 @@ export default function Premium() {
     }
   };
 
+  const handleKaspiPay = (plan: Plan) => {
+    toast({
+      title: "Kaspi.kz Payment",
+      description: `Для оплаты ${plan.price} ₸ через Kaspi, перейдите в приложение Kaspi.kz -> Платежи -> Поиск "MedAI" или отсканируйте QR код в офисе.`,
+    });
+    // In a real scenario, this would generate a Kaspi QR or redirect to Kaspi Pay
+    window.open("https://kaspi.kz/pay/MedAI", "_blank");
+  };
+
   return (
     <Layout>
       <SEOHead title="Premium" description="Upgrade to MedAI+ Premium for unlimited access" path="/premium" />
@@ -226,10 +235,19 @@ export default function Premium() {
         </div>
 
         {/* Trust footer */}
-        <div className="max-w-3xl mx-auto text-center mb-10">
+        <div className="max-w-3xl mx-auto text-center mb-10 space-y-4">
+          <div className="flex flex-wrap justify-center gap-4">
+             <Button
+                variant="outline"
+                className="rounded-xl border-red-500/20 hover:bg-red-500/5 text-red-600 font-semibold"
+                onClick={() => handleKaspiPay(plans[0])}
+              >
+                <span className="mr-2">₸</span> Оплатить через Kaspi.kz
+              </Button>
+          </div>
           <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
             <Shield className="h-4 w-4" />
-            {t('securePayment')} · Stripe
+            {t('securePayment')} · Stripe & Kaspi.kz
           </p>
         </div>
 
