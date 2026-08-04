@@ -131,26 +131,63 @@ router.post("/analyze-symptoms", async (req, res) => {
     const { userId } = getAuth(req);
     if (!symptoms || typeof symptoms !== "string") return res.status(400).json({ error: "symptoms required" });
 
+    const safeLang = VALID_LANGUAGES.has(language) ? language : "en";
+    const langInstruction = getLangInstruction(safeLang);
+
     // MOCK MODE FOR TESTING
     if (process.env.NODE_ENV === "development" || !process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+      const isRu = safeLang === "ru";
+      const isKz = safeLang === "kk";
+      const isZh = safeLang === "zh";
+
       return res.json({
         conditions: [
-          { name: "Viral Upper Respiratory Infection", description: "Common cold involving nasal and throat inflammation.", possibleCause: "Rhinovirus", severity: "low", sources: ["PubMed: https://pubmed.ncbi.nlm.nih.gov/30234567/"] },
-          { name: "Bacterial Sinusitis", description: "Infection of the sinuses with mucopurulent discharge.", possibleCause: "S. pneumoniae", severity: "medium", sources: ["Mayo Clinic: https://mayoclinic.org"] }
+          {
+            name: isRu ? "Острая респираторная вирусная инфекция (ОРВИ)" : isKz ? "Жіті респираторлық вирустық инфекция (ЖРВИ)" : isZh ? "急性 viral 上呼吸道感染" : "Acute Viral Upper Respiratory Infection",
+            description: isRu ? "Острое воспаление дыхательных путей, вызванное вирусом." : isKz ? "Вирус тудырған тыныс алу жолдарының жедел қабынуы." : isZh ? "由病毒引起的呼吸道急性炎症。" : "Acute inflammation of the respiratory tract caused by virus.",
+            possibleCause: "Rhinovirus / Adenovirus",
+            severity: "low",
+            sources: ["PubMed: https://pubmed.ncbi.nlm.nih.gov/30234567/"]
+          },
+          {
+            name: isRu ? "Острый синусит" : isKz ? "Жедел синусит" : isZh ? "急性鼻窦炎" : "Acute Sinusitis",
+            description: isRu ? "Воспаление слизистой оболочки околоносовых пазух." : isKz ? "Мұрын маңы қойнауларының сілемейлі қабығының қабынуы." : isZh ? "鼻窦粘膜的炎症。" : "Inflammation of the paranasal sinus mucosa.",
+            possibleCause: "S. pneumoniae / H. influenzae",
+            severity: "medium",
+            sources: ["Mayo Clinic: https://mayoclinic.org"]
+          }
         ],
         healthScore: 85,
         riskScore: 20,
-        verdict: "Per [NEJM](https://nejm.org) (2021): Acute viral symptoms typically resolve within 7-10 days with supportive care. Your pattern of runny nose and low fever matches this pattern perfectly.",
+        verdict: isRu
+          ? "Согласно публикации в [NEJM](https://nejm.org) (2021): симптомы неосложненной ОРВИ обычно проходят самостоятельно в течение 7-10 дней при симптоматической терапии. Ваша картина симптомов полностью соответствует типичному течению вирусной инфекции."
+          : isKz
+          ? "[NEJM](https://nejm.org) (2021) жарияланымдарына сәйкес: асқынбаған ЖРВИ белгілері әдетте симптоматикалық емдеу кезінде 7-10 күн ішінде өздігінен басылады."
+          : "Per [NEJM](https://nejm.org) (2021): Acute viral symptoms typically resolve within 7-10 days with supportive care. Your pattern matches this clinical scenario perfectly.",
         verdictEvidence: [
-          { journal: "The New England Journal of Medicine", url: "https://nejm.org", year: "2021", finding: "Supportive care remains the gold standard for non-complicated viral upper respiratory infections." }
+          {
+            journal: "The New England Journal of Medicine",
+            url: "https://nejm.org",
+            year: "2021",
+            finding: isRu
+              ? "Симптоматическая терапия остается золотым стандартом при неосложненных вирусных инфекциях верхних дыхательных путей."
+              : isKz
+              ? "Симптоматикалық терапия асқынбаған жоғарғы тыныс алу жолдарының вирустық инфекцияларында алтын стандарт болып қала береді."
+              : "Supportive care remains the gold standard for non-complicated viral upper respiratory infections."
+          }
         ],
-        shortTermMeasures: ["Rest", "Hydration", "Nasal saline"],
-        longTermMeasures: ["Hand hygiene", "Balanced diet"]
+        shortTermMeasures: isRu
+          ? ["Постельный режим", "Обильное теплое питье", "Промывание носа физраствором"]
+          : isKz
+          ? ["Төсек режимі", "Жылы сұйықтықты көп ішу", "Мұрынды тұзды ерітіндімен шаю"]
+          : ["Rest", "Hydration", "Nasal saline"],
+        longTermMeasures: isRu
+          ? ["Соблюдение гигиены рук", "Сбалансированное питание", "Укрепление иммунитета"]
+          : isKz
+          ? ["Қол гигиенасы", "Теңдестірілген тамақтану", "Иммунитетті нығайту"]
+          : ["Hand hygiene", "Balanced diet"]
       });
     }
-
-    const safeLang = VALID_LANGUAGES.has(language) ? language : "en";
-    const langInstruction = getLangInstruction(safeLang);
 
     const completion = await openai.chat.completions.create({
       model: AI_MODEL,
@@ -249,7 +286,8 @@ Return exactly 3 conditions ranked by decreasing likelihood.`,
       tool_choice: { type: "function", function: { name: "return_analysis" } },
     });
 
-    const args = completion.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    const toolCall = completion.choices[0]?.message?.tool_calls?.[0] as any;
+    const args = toolCall?.function?.arguments;
     const result = args ? JSON.parse(args) : { conditions: [], healthScore: 50, riskScore: 50, verdict: "", shortTermMeasures: [], longTermMeasures: [] };
 
     try {
@@ -275,7 +313,10 @@ router.post("/ai-doctor", async (req, res) => {
   try {
     const { messages, profileContext, language = "en", visitorId } = req.body;
     const { userId } = getAuth(req);
-    if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: "messages required" });
+    if (!messages || !Array.isArray(messages)) {
+      res.status(400).json({ error: "messages required" });
+      return;
+    }
 
     const safeLang = VALID_LANGUAGES.has(language) ? language : "en";
     const langInstruction = getLangInstruction(safeLang);
@@ -358,10 +399,12 @@ ${profileContext ? `PATIENT CONTEXT (personalize advice to this patient):\n${Str
     } catch (dbErr) {
       console.error("DB write error (non-fatal):", dbErr instanceof Error ? dbErr.message : dbErr);
     }
+    return;
   } catch (error) {
     console.error("[ai-doctor]", error instanceof Error ? error.message : error);
     if (!res.headersSent) {
-      return res.status(500).json({ error: "An internal error occurred. Please try again." });
+      res.status(500).json({ error: "An internal error occurred. Please try again." });
+      return;
     }
     res.write(`data: ${JSON.stringify({ error: "An error occurred. Please try again." })}\n\n`);
     res.end();
@@ -559,7 +602,8 @@ The verdictEvidence array MUST mirror those inline citations with structured dat
       max_tokens: 2000,
     });
 
-    const args = completion.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    const toolCall = completion.choices[0]?.message?.tool_calls?.[0] as any;
+    const args = toolCall?.function?.arguments;
     const result = args ? JSON.parse(args) : {
       conditions: [],
       observations: ["Unable to analyze image. Please try a clearer photo."],
@@ -782,7 +826,8 @@ Always recommend consulting a licensed pharmacist or physician before starting a
       tool_choice: { type: "function", function: { name: "return_medicines" } },
     });
 
-    const args = completion.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    const toolCall = completion.choices[0]?.message?.tool_calls?.[0] as any;
+    const args = toolCall?.function?.arguments;
     const rawResult = args ? JSON.parse(args) : { medicines: [], generalAdvice: "", disclaimer: "" };
 
     const result = {
@@ -1184,7 +1229,8 @@ For each suggestion you MUST provide:
       tool_choice: { type: "function", function: { name: "return_journals" } },
     });
 
-    const args = completion.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    const toolCall = completion.choices[0]?.message?.tool_calls?.[0] as any;
+    const args = toolCall?.function?.arguments;
     const result = args ? JSON.parse(args) : { journals: [] };
 
     if (visitorId) {
