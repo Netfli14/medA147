@@ -19,12 +19,12 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
           {mode === "login" ? (
             <SignIn
               appearance={{ elements: { rootBox: "w-full", card: "shadow-none border-0 w-full", footer: "hidden" } }}
-              afterSignInUrl="/"
+              fallbackRedirectUrl="/"
             />
           ) : (
             <SignUp
               appearance={{ elements: { rootBox: "w-full", card: "shadow-none border-0 w-full", footer: "hidden" } }}
-              afterSignUpUrl="/"
+              fallbackRedirectUrl="/"
             />
           )}
           <p className="text-center text-sm text-muted-foreground mt-4">

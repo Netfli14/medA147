@@ -11,7 +11,7 @@ const router = Router();
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
-  return new Stripe(key, { apiVersion: "2025-06-30.basil" });
+  return new Stripe(key, { apiVersion: "2025-06-30.basil" as any });
 }
 
 function getPriceId(plan: string): string | null {
@@ -120,7 +120,7 @@ router.post("/webhook", async (req, res) => {
     const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
 
     if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.CheckoutSession;
+      const session = event.data.object as any;
       const userId = session.metadata?.userId;
       if (userId && session.subscription) {
         await db.insert(userPremium).values({
