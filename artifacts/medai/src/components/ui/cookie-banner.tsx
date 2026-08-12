@@ -13,10 +13,13 @@ export function CookieBanner() {
 
   useEffect(() => {
     const consent = localStorage.getItem(COOKIE_KEY);
+    let timer: NodeJS.Timeout | undefined;
     if (!consent) {
-      const timer = setTimeout(() => setVisible(true), 1200);
-      return () => clearTimeout(timer);
+      timer = setTimeout(() => setVisible(true), 1200);
     }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   const accept = () => {
