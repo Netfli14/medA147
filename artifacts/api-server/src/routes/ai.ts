@@ -249,7 +249,7 @@ Return exactly 3 conditions ranked by decreasing likelihood.`,
       tool_choice: { type: "function", function: { name: "return_analysis" } },
     });
 
-    const args = completion.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    const args = (completion.choices[0]?.message?.tool_calls?.[0] as any)?.function?.arguments;
     const result = args ? JSON.parse(args) : { conditions: [], healthScore: 50, riskScore: 50, verdict: "", shortTermMeasures: [], longTermMeasures: [] };
 
     try {
@@ -358,6 +358,7 @@ ${profileContext ? `PATIENT CONTEXT (personalize advice to this patient):\n${Str
     } catch (dbErr) {
       console.error("DB write error (non-fatal):", dbErr instanceof Error ? dbErr.message : dbErr);
     }
+    return;
   } catch (error) {
     console.error("[ai-doctor]", error instanceof Error ? error.message : error);
     if (!res.headersSent) {
@@ -365,6 +366,7 @@ ${profileContext ? `PATIENT CONTEXT (personalize advice to this patient):\n${Str
     }
     res.write(`data: ${JSON.stringify({ error: "An error occurred. Please try again." })}\n\n`);
     res.end();
+    return;
   }
 });
 
@@ -559,7 +561,7 @@ The verdictEvidence array MUST mirror those inline citations with structured dat
       max_tokens: 2000,
     });
 
-    const args = completion.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    const args = (completion.choices[0]?.message?.tool_calls?.[0] as any)?.function?.arguments;
     const result = args ? JSON.parse(args) : {
       conditions: [],
       observations: ["Unable to analyze image. Please try a clearer photo."],
@@ -782,7 +784,7 @@ Always recommend consulting a licensed pharmacist or physician before starting a
       tool_choice: { type: "function", function: { name: "return_medicines" } },
     });
 
-    const args = completion.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    const args = (completion.choices[0]?.message?.tool_calls?.[0] as any)?.function?.arguments;
     const rawResult = args ? JSON.parse(args) : { medicines: [], generalAdvice: "", disclaimer: "" };
 
     const result = {
@@ -1184,7 +1186,7 @@ For each suggestion you MUST provide:
       tool_choice: { type: "function", function: { name: "return_journals" } },
     });
 
-    const args = completion.choices[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    const args = (completion.choices[0]?.message?.tool_calls?.[0] as any)?.function?.arguments;
     const result = args ? JSON.parse(args) : { journals: [] };
 
     if (visitorId) {
