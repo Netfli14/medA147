@@ -16,6 +16,7 @@ const ALLOWED_ORIGINS = [
   /\.replit\.dev$/,
   /\.replit\.app$/,
   /\.repl\.co$/,
+  /\.onrender\.com$/,
   /^http:\/\/localhost(:\d+)?$/,
 ];
 
