@@ -8,12 +8,19 @@ const PUBLISHABLE_KEY =
   import.meta.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
   "pk_test_dmFzdC1zbmlwZS02LmNsZXJrLmFjY291bnRzLmRldiQ";
 
-if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Root element not found");
 }
 
-createRoot(document.getElementById("root")!).render(
-  <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-    <App />
-  </ClerkProvider>
-);
+try {
+  createRoot(rootElement).render(
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+      <App />
+    </ClerkProvider>
+  );
+} catch (error) {
+  console.error("Rendering error:", error);
+  rootElement.innerHTML = `<div style="padding: 20px; color: red;">Failed to load application. ${error instanceof Error ? error.message : ""}</div>`;
+}
