@@ -1,5 +1,7 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import path from "node:path";
+import fs from "node:fs";
 import { pinoHttp } from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
@@ -78,5 +80,27 @@ app.use(
 );
 
 app.use("/api", router);
+
+// Serve static assets for built React SPA frontend
+const possibleStaticPaths = [
+  path.resolve(process.cwd(), "artifacts/medai/dist/public"),
+  path.resolve(process.cwd(), "../medai/dist/public"),
+  path.resolve(import.meta.dirname, "../../medai/dist/public"),
+];
+
+const staticPath = possibleStaticPaths.find((p) => fs.existsSync(p));
+
+if (staticPath) {
+  app.use(express.static(staticPath));
+  app.use((req, res, next) => {
+    if (req.method === "GET" && !req.path.startsWith("/api")) {
+      const indexPath = path.join(staticPath, "index.html");
+      if (fs.existsSync(indexPath)) {
+        return res.sendFile(indexPath);
+      }
+    }
+    next();
+  });
+}
 
 export default app;
