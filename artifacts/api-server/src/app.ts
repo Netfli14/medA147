@@ -1,5 +1,7 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import path from "node:path";
+import fs from "node:fs";
 import { pinoHttp } from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
@@ -62,15 +64,43 @@ app.use("/api/premium/webhook", express.raw({ type: "application/json" }));
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 
+const clerkPublishableKey =
+  process.env.CLERK_PUBLISHABLE_KEY ||
+  process.env.VITE_CLERK_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+  "pk_test_dmFzdC1zbmlwZS02LmNsZXJrLmFjY291bnRzLmRldiQ";
+
 app.use(
   clerkMiddleware((req) => ({
     publishableKey: publishableKeyFromHost(
       getClerkProxyHost(req) ?? "",
-      process.env.CLERK_PUBLISHABLE_KEY,
+      clerkPublishableKey,
     ),
   })),
 );
 
 app.use("/api", router);
+
+// Serve static assets for built React SPA frontend
+const possibleStaticPaths = [
+  path.resolve(process.cwd(), "artifacts/medai/dist/public"),
+  path.resolve(process.cwd(), "../medai/dist/public"),
+  path.resolve(import.meta.dirname, "../../medai/dist/public"),
+];
+
+const staticPath = possibleStaticPaths.find((p) => fs.existsSync(p));
+
+if (staticPath) {
+  app.use(express.static(staticPath));
+  app.use((req, res, next) => {
+    if (req.method === "GET" && !req.path.startsWith("/api")) {
+      const indexPath = path.join(staticPath, "index.html");
+      if (fs.existsSync(indexPath)) {
+        return res.sendFile(indexPath);
+      }
+    }
+    next();
+  });
+}
 
 export default app;
